@@ -5,7 +5,7 @@ from rest_framework import filters, mixins, status, viewsets
 from django.shortcuts import get_object_or_404
 
 
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer 
 from .models import User
 
 

@@ -7,7 +7,7 @@ from django.contrib.auth.models import AnonymousUser
 
 
 from .models import Amount, Favorite, Ingredient, ShoppingCart, Subscribe, Tag, Recipe
-from users.serializers import CustomUserSerializer, IsSubscribedUserSerializer
+from users.serializers import CustomUserSerializer
 
 
 class IngredientSerializer(serializers.ModelSerializer):  # done
@@ -16,8 +16,19 @@ class IngredientSerializer(serializers.ModelSerializer):  # done
         model = Ingredient
         fields = ("id", "name", "measurement_unit")
 
+    #def to_internal_value(self, data):
+     #   return Ingredient.objects.get(id=data)
+
+    #def to_internal_value(self, data):
+     #   return Ingredient.objects.values_list('id').get(id=data)
+    
+    #def to_representation(self, value):
+     #   return value
+
 
 class TagSerializer(serializers.ModelSerializer):  # done
+    #slug = serializers.HyperlinkedRelatedField(many=True, queryset=Tag.objects.all())
+    
     class Meta:
         model = Tag
         fields = ("id", "name", "color", "slug")
@@ -38,7 +49,8 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 # пока для просмотра рецепта или списка рецептов
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
-    author = IsSubscribedUserSerializer()
+    #tags = serializers.HyperlinkedRelatedField(many=True, queryset=Tag.objects.all())
+    author = CustomUserSerializer()
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -69,11 +81,18 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class AddIngredientToRecipeSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient', write_only=True)
-    amount = serializers.IntegerField(write_only=True)
+    #id =  serializers.ReadOnlyField(source='ingredient.id')
+    #id = IngredientSerializer()
+    #id = serializers.PrimaryKeyRelatedField(
+        #queryset=Ingredient.objects.all())
+    #amount = serializers.IntegerField(write_only=True)
+    measurement_unit = serializers.ReadOnlyField(source='ingredient.measurement_unit')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    
 
     class Meta:
         model = Amount
-        fields = ('id', 'amount')
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class AddTagToRecipeSerializer(serializers.ModelSerializer):
@@ -85,8 +104,9 @@ class AddTagToRecipeSerializer(serializers.ModelSerializer):
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
     ingredients = AddIngredientToRecipeSerializer(many=True)
-    tags = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Tag.objects.all())
+    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
+    #tags = serializers.HyperlinkedRelatedField(many=True, queryset=Tag.objects.all())
+
     image = Base64ImageField()
 
     class Meta:
@@ -98,9 +118,10 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop("ingredients")
         tags = set(validated_data.pop("tags"))
         recipe = Recipe.objects.create(**validated_data)
+        print(ingredients)
 
         for item in ingredients:
-            ingredient = Ingredient.objects.get(id=item["ingredient"])
+            ingredient = Ingredient.objects.get(id=item["ingredient"])   # ingredient
             Amount.objects.create(
                 recipe=recipe, ingredient=ingredient, amount=item["amount"])
 

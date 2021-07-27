@@ -6,14 +6,14 @@ from .models import User
 from recipes.models import Subscribe
 
 
+#class CustomUserSerializer(UserSerializer):
+
+ #   class Meta:
+  #      model = User
+   #     fields = ("email", "id", "username", "first_name", "last_name")
+
+
 class CustomUserSerializer(UserSerializer):
-
-    class Meta:
-        model = User
-        fields = ("email", "id", "username", "first_name", "last_name")
-
-
-class IsSubscribedUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
