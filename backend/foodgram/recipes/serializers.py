@@ -34,6 +34,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    """Get list of recipes or one recipe."""
     tags = TagSerializer(many=True)
     author = CustomUserSerializer()
     ingredients = serializers.SerializerMethodField()
@@ -76,14 +77,8 @@ class AddIngredientToRecipeSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-class AddTagToRecipeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Tag
-        fields = ("id")
-
-
 class CreateRecipeSerializer(serializers.ModelSerializer):
+    """Create, update or delete recipe."""
     ingredients = AddIngredientToRecipeSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all())

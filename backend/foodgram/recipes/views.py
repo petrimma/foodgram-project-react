@@ -19,10 +19,6 @@ from .serializers import (AddIngredientToRecipeSerializer,
                           SubscribeSerializer, TagSerializer)
 
 
-def TemplateView(request):
-    return render(request, 'build/index.html')
-
-
 class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     pagination_class = None
@@ -61,9 +57,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Recipe.objects.all()
-        is_favorited = self.request.query_params.get('is_favorited')
+        is_favorited = self.request.query_params.get("is_favorited")
         is_in_shopping_cart = self.request.query_params.get(
-            'is_in_shopping_cart')
+            "is_in_shopping_cart")
 
         if is_favorited == "true":
             user = self.request.user
