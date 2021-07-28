@@ -1,16 +1,9 @@
-from djoser.serializers import UserSerializer
-from rest_framework import serializers
 from django.contrib.auth.models import AnonymousUser
+from djoser.serializers import UserSerializer
+from recipes.models import Subscribe
+from rest_framework import serializers
 
 from .models import User
-from recipes.models import Subscribe
-
-
-#class CustomUserSerializer(UserSerializer):
-
- #   class Meta:
-  #      model = User
-   #     fields = ("email", "id", "username", "first_name", "last_name")
 
 
 class CustomUserSerializer(UserSerializer):

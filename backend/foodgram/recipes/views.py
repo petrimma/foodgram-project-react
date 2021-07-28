@@ -1,39 +1,31 @@
-from django.shortcuts import get_object_or_404
 from django.db.models import Sum
-from django.http import HttpResponseForbidden
-from django.shortcuts import render
 from django.http import HttpResponse
-from rest_framework import filters, viewsets
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from django.shortcuts import get_object_or_404, render
 from django_filters.rest_framework import DjangoFilterBackend
-
-
-from .serializers import AddIngredientToRecipeSerializer, CreateRecipeSerializer, FavoriteSerializer, IngredientSerializer, ShoppingCartSerializer, SubscribeSerializer, TagSerializer, RecipeSerializer, RecipeShortSerializer
-from .models import Amount, Favorite, Ingredient, ShoppingCart, Subscribe, Tag, Recipe
-from .permissions import IsAuthor
-from users.models import User
 from foodgram.pagination import FoodgramPagination
-from rest_framework import status
-from rest_framework.response import Response
-from django.http import Http404
+from rest_framework import viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from users.models import User
+
+from .filters import RecipeFilter
+from .models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
+                     Subscribe, Tag)
+from .permissions import IsAuthor
+from .serializers import (AddIngredientToRecipeSerializer,
+                          CreateRecipeSerializer, FavoriteSerializer,
+                          IngredientSerializer, RecipeSerializer,
+                          ShoppingCartSerializer,
+                          SubscribeSerializer, TagSerializer)
 
 
-def TemplateView(request):                              ###
+def TemplateView(request):
     return render(request, 'build/index.html')
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
-    #queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer    # AddIngredientToRecipeSerializer
-    #filter_backends = [filters.SearchFilter]
-    #search_fields = ["^name"]
-
-    #def get(self, request, *args, **kwargs):
-     #   query = request.GET['query']
-     #   queryset = self.queryset.filter(title__istartswith=query)
-      #  serializer = IngredientSerializer(queryset, many=True)
-       # return Response(serializer.data)
+    serializer_class = IngredientSerializer
+    pagination_class = None
 
     def get_queryset(self):
         queryset = Ingredient.objects.all()
@@ -46,7 +38,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
 
 class AmountViewSet(viewsets.ModelViewSet):
     serializer_class = AddIngredientToRecipeSerializer
-        
+
     def get_queryset(self):
         queryset = Ingredient.objects.all()
         name = self.request.query_params.get("name")
@@ -56,52 +48,47 @@ class AmountViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ("slug",)   
+    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = FoodgramPagination
-    filter_backends = (DjangoFilterBackend,) 
-    filterset_fields = ("author",)   
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = RecipeFilter
 
     def get_queryset(self):
         queryset = Recipe.objects.all()
         is_favorited = self.request.query_params.get('is_favorited')
-        is_in_shopping_cart = self.request.query_params.get('is_in_shopping_cart')
-        tags = self.request.query_params.getlist("tags") 
-        
-        if is_favorited == "true":    
+        is_in_shopping_cart = self.request.query_params.get(
+            'is_in_shopping_cart')
+
+        if is_favorited == "true":
             user = self.request.user
             queryset = queryset.filter(favorite_user__user=user)
-        
+
         if is_in_shopping_cart == "true":
             user = self.request.user
-            queryset = queryset.filter(in_shopping_cart__user=user)   
+            queryset = queryset.filter(in_shopping_cart__user=user)
 
-        if tags:
-            queryset = queryset.filter(tags__slug__in=tags)
- 
-        return queryset 
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user
         serializer.save(author=user)
 
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']:
+        if self.action in ["list", "retrieve"]:
             return RecipeSerializer
         else:
             return CreateRecipeSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
+        if self.action in ["list", "retrieve"]:
             permission_classes = [AllowAny]
-        elif self.action == 'create':
+        elif self.action == "create":
             permission_classes = [IsAuthenticated]
         else:
             permission_classes = [IsAuthor | IsAdminUser]
@@ -128,7 +115,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         follow.delete()
 
     def get_permissions(self):
-        if self.action == 'list':
+        if self.action == "list":
             permission_classes = [IsAuthor | IsAdminUser]
         else:
             permission_classes = [IsAuthenticated]
@@ -144,12 +131,16 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         recipe = get_object_or_404(Recipe, pk=self.kwargs.get("recipe_id"))
         serializer.save(user=self.request.user, recipe=recipe)
+        recipe.favorite_count += 1
+        recipe.save()
 
     def perform_destroy(self, instance):
         user = self.request.user
         recipe = get_object_or_404(Recipe, pk=self.kwargs.get("recipe_id"))
         favorite = get_object_or_404(Favorite, user=user, recipe=recipe)
         favorite.delete()
+        recipe.favorite_count -= 1
+        recipe.save()
 
 
 class ShoppingCartViewSet(viewsets.ModelViewSet):
@@ -183,7 +174,7 @@ def download_shopping_cart(request):
     response = HttpResponse()
     response.write("Список покупок Foodgram \n")
     response.write("\n")
-    
+
     for item in ingredients_sum:
         ingredient = ingredients_in_shopping_cart.filter(
             ingredient=item["ingredient"])[0].ingredient
@@ -192,7 +183,7 @@ def download_shopping_cart(request):
         sum = item["sum"]
         response.write(f"{ingredient_name} ({ingredient_unit}): {sum} \n")
 
-    response["Content-Type"] = "text/plain"    #application/pdf
-    response["Content-Disposition"] = "attachment; filename='shopping_list.txt'"
+    response["Content-Type"] = "text/plain"
+    response["Content-Disposition"] = "attachment; \
+        filename='shopping_list.txt'"
     return response
-

@@ -13,7 +13,7 @@ SECRET_KEY = 'h56$u)uq#=pf(hb&e@yxnou4k!#c-0hn%nu6*pd5yv=#5ond=6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -131,7 +131,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 6,
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',     # IsAuthenticated
+        'rest_framework.permissions.AllowAny',   
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [

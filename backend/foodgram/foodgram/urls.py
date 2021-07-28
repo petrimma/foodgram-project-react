@@ -1,21 +1,18 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-
-from recipes.views import TemplateView     ###
-
-from django.conf import settings           ###
-from django.conf.urls.static import static   ###
-
+from recipes.views import TemplateView  # ##
 
 urlpatterns = [
-    path('', TemplateView, name='index'),   ###
-    path('admin/', admin.site.urls),
-    path('api/auth/', include('users.urls')),
-    path('api/', include('recipes.urls')),
-    path('api/', include('users.urls')),
+    path("", TemplateView, name="index"),
+    path("admin/", admin.site.urls),
+    path("api/auth/", include("users.urls")),
+    path("api/", include("recipes.urls")),
+    path("api/", include("users.urls")),
 ]
 
-if settings.DEBUG:  ###
+if settings.DEBUG:
     urlpatterns += static(
         settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
     )

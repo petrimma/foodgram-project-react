@@ -16,9 +16,12 @@ urlpatterns = [
          SubscribeViewSet.as_view({"get": "create", "delete": "destroy"}),),
     path("users/subscriptions/", SubscribeViewSet.as_view({"get": "list"})),
     path("recipes/<int:recipe_id>/favorite/",
-         views.FavoriteViewSet.as_view({"get": "create", "delete": "destroy"})),
+         views.FavoriteViewSet.as_view(
+             {"get": "create", "delete": "destroy"})),
     path("recipes/<int:recipe_id>/shopping_cart/",
-         views.ShoppingCartViewSet.as_view({"get": "create", "delete": "destroy"})),
-    path("recipes/download_shopping_cart/", views.download_shopping_cart, name="download"), 
+         views.ShoppingCartViewSet.as_view(
+             {"get": "create", "delete": "destroy"})),
+    path("recipes/download_shopping_cart/",
+         views.download_shopping_cart, name="download"),
     path("", include(router.urls)),
 ]

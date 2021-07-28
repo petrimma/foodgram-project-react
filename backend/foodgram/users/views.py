@@ -1,12 +1,8 @@
 from djoser.views import UserViewSet
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework.permissions import AllowAny
 
-from django.shortcuts import get_object_or_404
-
-
-from .serializers import CustomUserSerializer 
 from .models import User
+from .serializers import CustomUserSerializer
 
 
 class CustomUserViewSet(UserViewSet):

@@ -1,34 +1,21 @@
-from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
-from foodgram.pagination import FoodgramPagination
 from django.core.paginator import Paginator
 from drf_extra_fields.fields import Base64ImageField
-from django.contrib.auth.models import AnonymousUser
-
-
-from .models import Amount, Favorite, Ingredient, ShoppingCart, Subscribe, Tag, Recipe
+from rest_framework import serializers
 from users.serializers import CustomUserSerializer
 
+from .models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
+                     Subscribe, Tag)
 
-class IngredientSerializer(serializers.ModelSerializer):  # done
+
+class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
         fields = ("id", "name", "measurement_unit")
 
-    #def to_internal_value(self, data):
-     #   return Ingredient.objects.get(id=data)
 
-    #def to_internal_value(self, data):
-     #   return Ingredient.objects.values_list('id').get(id=data)
-    
-    #def to_representation(self, value):
-     #   return value
+class TagSerializer(serializers.ModelSerializer):
 
-
-class TagSerializer(serializers.ModelSerializer):  # done
-    #slug = serializers.HyperlinkedRelatedField(many=True, queryset=Tag.objects.all())
-    
     class Meta:
         model = Tag
         fields = ("id", "name", "color", "slug")
@@ -46,10 +33,8 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-# пока для просмотра рецепта или списка рецептов
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
-    #tags = serializers.HyperlinkedRelatedField(many=True, queryset=Tag.objects.all())
     author = CustomUserSerializer()
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
@@ -57,7 +42,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ("id", "tags", "author", "ingredients", "is_favorited", "is_in_shopping_cart",
+        fields = ("id", "tags", "author", "ingredients",
+                  "is_favorited", "is_in_shopping_cart",
                   "name", "image", "text", "cooking_time")
 
     def get_ingredients(self, obj):
@@ -80,19 +66,14 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class AddIngredientToRecipeSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='ingredient', write_only=True)
-    #id =  serializers.ReadOnlyField(source='ingredient.id')
-    #id = IngredientSerializer()
-    #id = serializers.PrimaryKeyRelatedField(
-        #queryset=Ingredient.objects.all())
-    #amount = serializers.IntegerField(write_only=True)
-    measurement_unit = serializers.ReadOnlyField(source='ingredient.measurement_unit')
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    
+    id = serializers.IntegerField(source="ingredient", write_only=True)
+    measurement_unit = serializers.ReadOnlyField(
+        source="ingredient.measurement_unit")
+    name = serializers.ReadOnlyField(source="ingredient.name")
 
     class Meta:
         model = Amount
-        fields = ('id', 'name', 'measurement_unit', 'amount')
+        fields = ("id", "name", "measurement_unit", "amount")
 
 
 class AddTagToRecipeSerializer(serializers.ModelSerializer):
@@ -104,15 +85,14 @@ class AddTagToRecipeSerializer(serializers.ModelSerializer):
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
     ingredients = AddIngredientToRecipeSerializer(many=True)
-    tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
-    #tags = serializers.HyperlinkedRelatedField(many=True, queryset=Tag.objects.all())
-
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Tag.objects.all())
     image = Base64ImageField()
 
     class Meta:
         model = Recipe
         fields = ("ingredients", "tags", "name", "image",
-                  "text", "cooking_time")  # "image",
+                  "text", "cooking_time")
 
     def create(self, validated_data):
         ingredients = validated_data.pop("ingredients")
@@ -121,7 +101,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         print(ingredients)
 
         for item in ingredients:
-            ingredient = Ingredient.objects.get(id=item["ingredient"])   # ingredient
+            ingredient = Ingredient.objects.get(id=item["ingredient"])
             Amount.objects.create(
                 recipe=recipe, ingredient=ingredient, amount=item["amount"])
 
@@ -154,14 +134,14 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-class RecipeShortSerializer(serializers.ModelSerializer):  # done
+class RecipeShortSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
         fields = ("id", "name", "image", "cooking_time")
 
 
-class SubscribeSerializer(serializers.ModelSerializer):  # done
+class SubscribeSerializer(serializers.ModelSerializer):
     email = serializers.CharField(required=False, source="author.email")
     id = serializers.IntegerField(required=False, source="author.id")
     username = serializers.CharField(required=False, source="author.username")
@@ -248,7 +228,8 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         recipe_id = self.context.get("view").kwargs.get("recipe_id")
 
-        if ShoppingCart.objects.filter(user=user.id, recipe=recipe_id).exists():
+        if ShoppingCart.objects.filter(
+                user=user.id, recipe=recipe_id).exists():
             raise serializers.ValidationError(
                 "Этот рецепт уже в списке покупок.")
         return data
