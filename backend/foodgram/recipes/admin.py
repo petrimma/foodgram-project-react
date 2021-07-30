@@ -5,8 +5,12 @@ from .models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ("name", "author")
+    list_display = ("name", "author", "followers")
     list_filter = ("author", "name", "tags__name")
+
+    def followers(self, obj):
+        return obj.favorite_recipe.all().count()
+    followers.short_description = "Добавлен в избранное"
 
 
 class IngredientAdmin(admin.ModelAdmin):

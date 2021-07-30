@@ -1,8 +1,10 @@
 from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from users.serializers import CustomUserSerializer
 
+
+from users.serializers import CustomUserSerializer
 from .models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
                      Subscribe, Tag)
 
@@ -93,10 +95,9 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop("ingredients")
         tags = set(validated_data.pop("tags"))
         recipe = Recipe.objects.create(**validated_data)
-        print(ingredients)
 
         for item in ingredients:
-            ingredient = Ingredient.objects.get(id=item["ingredient"])
+            ingredient = get_object_or_404(Ingredient, pk=item["ingredient"])
             Amount.objects.create(
                 recipe=recipe, ingredient=ingredient, amount=item["amount"])
 
@@ -116,7 +117,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         instance.save()
 
         for item in ingredients_data:
-            ingredient = Ingredient.objects.get(id=item["ingredient"])
+            ingredient = get_object_or_404(Ingredient, pk=item["ingredient"])
             Amount.objects.create(
                 recipe=instance, ingredient=ingredient, amount=item["amount"])
 

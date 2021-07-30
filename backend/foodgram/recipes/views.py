@@ -1,47 +1,29 @@
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from foodgram.pagination import FoodgramPagination
 from rest_framework import viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
-from users.models import User
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
-from .filters import RecipeFilter
+from users.models import User
+from .filters import IngredientFilter, RecipeFilter
+from foodgram.pagination import FoodgramPagination
 from .models import (Amount, Favorite, Ingredient, Recipe, ShoppingCart,
                      Subscribe, Tag)
-from .permissions import IsAuthor
-from .serializers import (AddIngredientToRecipeSerializer,
-                          CreateRecipeSerializer, FavoriteSerializer,
+from .permissions import IsAuthor, RecipePermission, SubscribePermission
+from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeSerializer,
                           ShoppingCartSerializer,
                           SubscribeSerializer, TagSerializer)
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-
-    def get_queryset(self):
-        queryset = Ingredient.objects.all()
-        name = self.request.query_params.get("name")
-        print(name)
-        if name is not None:
-            queryset = queryset.filter(name__startswith=name)
-        return queryset
-
-
-class AmountViewSet(viewsets.ModelViewSet):
-    serializer_class = AddIngredientToRecipeSerializer
-
-    def get_queryset(self):
-        queryset = Ingredient.objects.all()
-        name = self.request.query_params.get("name")
-        print(name)
-        if name is not None:
-            queryset = queryset.filter(name__startswith=name)
-        return queryset
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = IngredientFilter
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -51,25 +33,11 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    permission_classes = [RecipePermission, ]
     pagination_class = FoodgramPagination
     filter_backends = (DjangoFilterBackend,)
     filter_class = RecipeFilter
-
-    def get_queryset(self):
-        queryset = Recipe.objects.all()
-        is_favorited = self.request.query_params.get("is_favorited")
-        is_in_shopping_cart = self.request.query_params.get(
-            "is_in_shopping_cart")
-
-        if is_favorited == "true":
-            user = self.request.user
-            queryset = queryset.filter(favorite_user__user=user)
-
-        if is_in_shopping_cart == "true":
-            user = self.request.user
-            queryset = queryset.filter(in_shopping_cart__user=user)
-
-        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -81,18 +49,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         else:
             return CreateRecipeSerializer
 
-    def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
-            permission_classes = [AllowAny]
-        elif self.action == "create":
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAuthor | IsAdminUser]
-        return [permission() for permission in permission_classes]
-
 
 class SubscribeViewSet(viewsets.ModelViewSet):
     serializer_class = SubscribeSerializer
+    permission_classes = [SubscribePermission, ]
     pagination_class = FoodgramPagination
     lookup_field = "author_id"
 
@@ -110,13 +70,6 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         follow = get_object_or_404(Subscribe, user=user, author=author)
         follow.delete()
 
-    def get_permissions(self):
-        if self.action == "list":
-            permission_classes = [IsAuthor | IsAdminUser]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
-
 
 class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
@@ -127,16 +80,12 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         recipe = get_object_or_404(Recipe, pk=self.kwargs.get("recipe_id"))
         serializer.save(user=self.request.user, recipe=recipe)
-        recipe.favorite_count += 1
-        recipe.save()
 
     def perform_destroy(self, instance):
         user = self.request.user
         recipe = get_object_or_404(Recipe, pk=self.kwargs.get("recipe_id"))
         favorite = get_object_or_404(Favorite, user=user, recipe=recipe)
         favorite.delete()
-        recipe.favorite_count -= 1
-        recipe.save()
 
 
 class ShoppingCartViewSet(viewsets.ModelViewSet):
@@ -157,7 +106,7 @@ class ShoppingCartViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["GET"])
-@permission_classes((IsAuthor,))
+@permission_classes([IsAuthor | IsAdminUser])
 def download_shopping_cart(request):
     user = request.user
     recipes_in_shopping_cart = Recipe.objects.filter(
