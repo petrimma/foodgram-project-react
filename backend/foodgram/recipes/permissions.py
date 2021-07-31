@@ -23,3 +23,4 @@ class SubscribePermission(permissions.BasePermission):
         return (view.action == "list"
                 and (obj.user == request.user or request.user.is_staff)
                 or request.user.is_authenticated)
+                
