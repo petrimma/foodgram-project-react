@@ -16,14 +16,15 @@ services:
       - ./.env 
   
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: tetradir/frontend:latest
+    #build:
+     # context: ../frontend
+      #dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
 
   backend:
-    image: tetradir/foodgram:latest
+    image: tetradir/backend:latest
     #build:
      # context: ../backend/foodgram
       #dockerfile: Dockerfile
