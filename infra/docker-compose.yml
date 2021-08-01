@@ -23,9 +23,10 @@ services:
       - ../frontend/:/app/result_build/
 
   backend:
-    build:
-      context: ../backend/foodgram
-      dockerfile: Dockerfile
+    image: tetradir/foodgram:latest
+    #build:
+     # context: ../backend/foodgram
+      #dockerfile: Dockerfile
     restart: always
     volumes:
       - static_value:/code/static/
