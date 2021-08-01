@@ -16,10 +16,10 @@ services:
       - ./.env 
   
   frontend:
-    image: tetradir/frontend:latest
-    #build:
-     # context: ../frontend
-      #dockerfile: Dockerfile
+    #image: tetradir/frontend:latest
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
 
