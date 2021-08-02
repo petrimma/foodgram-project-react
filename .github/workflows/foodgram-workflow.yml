@@ -54,6 +54,7 @@ jobs:
           stack_file_name: docker-compose.yaml
           script: |
             sudo docker pull tetradir/backend:latest
+            sudo docker pull tetradir/frontend:latest    
             sudo docker-compose stop
             sudo docker-compose rm backend
             touch .env 
