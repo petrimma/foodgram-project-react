@@ -47,7 +47,7 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
       - result_build:/usr/share/nginx/html/  
       - static_value:/static 
-      - media_value://media
+      - media_value:/media
       - ./docs:/usr/share/nginx/html/api/docs 
     ports: 
       - 80:80
