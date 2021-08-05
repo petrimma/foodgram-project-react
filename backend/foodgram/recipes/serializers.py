@@ -112,8 +112,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         for item in ingredients:
             if item["amount"] < 1:
                 raise serializers.ValidationError(
-                      "Количество ингредиента не может быть меньше 1.")
-            
+                    "Количество ингредиента не может быть меньше 1.")
+
             ingredient = get_object_or_404(Ingredient, pk=item["ingredient"])
             Amount.objects.create(
                 recipe=recipe, ingredient=ingredient, amount=item["amount"])
@@ -136,7 +136,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         for item in ingredients_data:
             if item["amount"] < 1:
                 raise serializers.ValidationError(
-                      "Количество ингредиента не может быть меньше 1.")
+                    "Количество ингредиента не может быть меньше 1.")
 
             ingredient = get_object_or_404(Ingredient, pk=item["ingredient"])
             Amount.objects.create(
