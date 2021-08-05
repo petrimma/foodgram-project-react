@@ -79,13 +79,6 @@ class AddIngredientToRecipeSerializer(serializers.ModelSerializer):
         model = Amount
         fields = ("id", "name", "measurement_unit", "amount")
 
-    def validate_amount(self, data):
-        if data < 1:
-            raise serializers.ValidationError(
-                "Количество ингредиента должно быть не меньше 1."
-            )
-        return data
-
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
     """Create, update or delete recipe."""
@@ -95,7 +88,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(
         error_messages={
-            "invalid": "Время приготовления должно быть не меньше 1 минуты."
+            "invalid": "Время приготовления не может быть меньше 1 минуты."
         }
     )
 
@@ -107,7 +100,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def validate_cooking_time(self, data):
         if data < 1:
             raise serializers.ValidationError(
-                "Время приготовления должно быть не меньше 1 минуты."
+                "Время приготовления не может быть меньше 1 минуты."
             )
         return data
 
@@ -117,6 +110,10 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
 
         for item in ingredients:
+            if item["amount"] < 1:
+                raise serializers.ValidationError(
+                      "Количество ингредиента не может быть меньше 1.")
+            
             ingredient = get_object_or_404(Ingredient, pk=item["ingredient"])
             Amount.objects.create(
                 recipe=recipe, ingredient=ingredient, amount=item["amount"])
@@ -137,6 +134,10 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         instance.save()
 
         for item in ingredients_data:
+            if item["amount"] < 1:
+                raise serializers.ValidationError(
+                      "Количество ингредиента не может быть меньше 1.")
+
             ingredient = get_object_or_404(Ingredient, pk=item["ingredient"])
             Amount.objects.create(
                 recipe=instance, ingredient=ingredient, amount=item["amount"])
