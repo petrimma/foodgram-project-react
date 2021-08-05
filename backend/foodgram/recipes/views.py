@@ -74,8 +74,11 @@ class SubscribeViewSet(viewsets.ModelViewSet):
 class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated, ]
-    queryset = Favorite.objects.all()
     lookup_field = "recipe_id"
+
+    def get_queryset(self):
+        user = self.request.user
+        return Favorite.objects.filter(user=user)
 
     def perform_create(self, serializer):
         recipe = get_object_or_404(Recipe, pk=self.kwargs.get("recipe_id"))
@@ -91,8 +94,11 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 class ShoppingCartViewSet(viewsets.ModelViewSet):
     serializer_class = ShoppingCartSerializer
     permission_classes = [IsAuthenticated, ]
-    queryset = ShoppingCart.objects.all()
     lookup_field = "recipe_id"
+
+    def get_queryset(self):
+        user = self.request.user
+        return ShoppingCart.objects.filter(user=user)
 
     def perform_create(self, serializer):
         recipe = get_object_or_404(Recipe, pk=self.kwargs.get("recipe_id"))

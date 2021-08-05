@@ -139,3 +139,6 @@ static/
 
 # petrimma folder
 petrimma@178.154.220.8/
+
+# migrations
+0001_initial.py

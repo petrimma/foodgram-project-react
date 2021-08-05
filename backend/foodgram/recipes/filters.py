@@ -37,4 +37,4 @@ class RecipeFilter(django_filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ["author", "tags", "is_favorited", "in_shopping_cart"]
+        fields = ["is_favorited", "in_shopping_cart", "author", "tags", ]

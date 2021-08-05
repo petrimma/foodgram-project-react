@@ -91,6 +91,21 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         fields = ("ingredients", "tags", "name", "image",
                   "text", "cooking_time")
 
+    def validate_ingredients(self, data):
+        for ingredient in data:
+            if ingredient["amount"] < 1:
+                raise serializers.ValidationError(
+                    'Количество ингредиента должно быть больше 1.'
+                )
+        return data
+
+    def validate_cooking_time(self, data):
+        if data < 1:
+            raise serializers.ValidationError(
+                'Время приготовления должно быть больше 1 минуты.'
+            )
+        return data
+
     def create(self, validated_data):
         ingredients = validated_data.pop("ingredients")
         tags = set(validated_data.pop("tags"))
