@@ -30,9 +30,8 @@
 Админка:
 > http://178.154.221.184/admin/
 
-Данные суперпользователя:
-> email: admin@admin.ru  
-> password: admin  
+Создать суперпользователя:
+> sudo docker-compose exec backend python manage.py createsuperuser 
 
 ## Технологии
 - python
