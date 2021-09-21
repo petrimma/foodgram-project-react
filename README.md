@@ -10,18 +10,24 @@
 > https://docs.docker.com/engine/install/ubuntu/
 
 Клонируйте репозиторий: 
-> git clone https://github.com/petrimma/foodgram-project-react.git
+```
+git clone https://github.com/petrimma/foodgram-project-react.git
+```
 
 В папку infra добавьте файл .env и укажите в нем следующие переменные:
-> DB_ENGINE=  
-> POSTGRES_DB=   
-> POSTGRES_USER=  
-> POSTGRES_PASSWORD=  
-> DB_HOST=  
-> DB_PORT=5432  
+```
+DB_ENGINE=  
+POSTGRES_DB=   
+POSTGRES_USER=  
+POSTGRES_PASSWORD=  
+DB_HOST=  
+DB_PORT=5432  
+```
 
 Запустите проект из директории infra:
-> docker-compose up
+```
+docker-compose up
+```
 
 Документация:  
 > http://localhost/api/docs/redoc.html
@@ -30,7 +36,9 @@
 >  http://localhost/admin/
 
 Создать суперпользователя:
-> sudo docker-compose exec backend python manage.py createsuperuser 
+```
+sudo docker-compose exec backend python manage.py createsuperuser 
+```
 
 ## Технологии
 - python
